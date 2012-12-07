@@ -5,7 +5,7 @@ window.requestAnimFrame = (function(){
     window.oRequestAnimationFrame      ||
     window.msRequestAnimationFrame     ||
     function( callback ){
-    window.setTimeout(callback, 1000 / 60);
+    window.setTimeout(callback, 1000 / 40);
   };
 })();
 
@@ -16,7 +16,6 @@ var Wave = (function(options) {
         height = $(window).height();
 
     var defaultDrawOptions = {
-        amplitudeFactor: 1,
         startingPosition: [0, height/2],
         waveCount: 3,
         amplitudeRange: [40,120],
@@ -72,15 +71,22 @@ var Wave = (function(options) {
         clearCanvas();
         var opt = drawOptions;
 
-        var paths = [];
+        var paperElements = [];
         for (var i = 0; i < opt.waveCount; ++i) {
             var amplitude = amplitudes[i];
                 waveLength = waveLengths[i];
                 rotation = rotations[i];
                 lineLength = lineLengths[i];
 
+            var raster = undefined;
+            if (i === opt.waveCount - 1) {
+                raster = new paper.Raster('ship');
+                raster.rotate(1);
+                paperElements.push(raster);
+            }
+
             var path = new paper.Path();
-            paths.push(path);
+            paperElements.push(path);
             path.style = {
                 strokeColor: opt.strokeColor,
                 strokeWidth: opt.strokeWidth,
@@ -90,7 +96,6 @@ var Wave = (function(options) {
 
             var y = undefined;
             for (var x = 0; x < lineLength + 10; x += lineLength / 10) {
-                amplitude = amplitude * opt.amplitudeFactor;
                 var time = Date.now();
 
                 y = wave(time, x, amplitude, waveLength, additions[i], speeds[i]);
@@ -100,6 +105,19 @@ var Wave = (function(options) {
                 y = coord[1] + startingHeights[i];
                 path.lineTo(new paper.Point(newX, y));
             }
+            if (raster !== undefined) {
+                var point = path.getPointAt(path.length/2);
+                point.y -= 120;
+                raster.position = point;
+
+                var a = path.getPointAt(path.length/2 - 20),
+                    b = path.getPointAt(path.length/2 + 20);
+
+                var rotation = Math.tan((b.x - a.x) / (b.y - a.y));
+                rotation = 180/Math.PI * rotation;
+                raster.rotate(rotation);
+                console.log(rotation);
+            }
             path.smooth();
             path.lineTo(new paper.Point(width, height));
             path.lineTo(new paper.Point(0, height));
@@ -108,8 +126,8 @@ var Wave = (function(options) {
         }
 
         paper.view.draw();
-        for (var i = 0; i < paths.length; ++i) {
-            paths[i].remove();
+        for (var i = 0; i < paperElements.length; ++i) {
+            paperElements[i].remove();
         }
     };
 
