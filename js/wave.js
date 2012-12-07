@@ -17,8 +17,8 @@ var Wave = (function(options) {
 
     var defaultDrawOptions = {
         startingPosition: [0, height/2],
-        waveCount: 3,
-        amplitudeRange: [80,120],
+        waveCount: 5,
+        amplitudeRange: [100,200],
         waveLengthRange: [1200, 2000],
         lineLengthRange: [width, width],
         rotationRange: [0, 0],
@@ -69,6 +69,13 @@ var Wave = (function(options) {
 
     function draw() {
         clearCanvas();
+
+        var background = new paper.Path();
+        background.style = {fillColor: '#C0E2FA'};
+        background.lineTo(new paper.Point(canvas.width, 0));
+        background.lineTo(new paper.Point(canvas.width, canvas.height));
+        background.lineTo(new paper.Point(0, canvas.height));
+        background.lineTo(new paper.Point(0, 0));
         var opt = drawOptions;
 
         var paperElements = [];
@@ -81,7 +88,6 @@ var Wave = (function(options) {
             var raster = undefined;
             if (i === opt.waveCount - 1) {
                 raster = new paper.Raster('ship');
-                raster.rotate(1);
                 paperElements.push(raster);
             }
 
@@ -116,8 +122,8 @@ var Wave = (function(options) {
 
                 raster.position = point;
 
-                var a = path.getPointAt(path.length/2 - 3),
-                    b = path.getPointAt(path.length/2 + 3);
+                var a = path.getPointAt(path.length/2 - 10),
+                    b = path.getPointAt(path.length/2 + 10);
 
                 var rotation = Math.atan((b.x - a.x) / (b.y - a.y));
                 rotation = 180/Math.PI * rotation;
@@ -135,6 +141,7 @@ var Wave = (function(options) {
         for (var i = 0; i < paperElements.length; ++i) {
             paperElements[i].remove();
         }
+        background.remove();
     };
 
     /*
