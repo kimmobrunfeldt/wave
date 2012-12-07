@@ -18,7 +18,7 @@ var Wave = (function(options) {
     var defaultDrawOptions = {
         startingPosition: [0, height/2],
         waveCount: 3,
-        amplitudeRange: [40,120],
+        amplitudeRange: [80,120],
         waveLengthRange: [1200, 2000],
         lineLengthRange: [width, width],
         rotationRange: [0, 0],
@@ -107,16 +107,22 @@ var Wave = (function(options) {
             }
             if (raster !== undefined) {
                 var point = path.getPointAt(path.length/2);
-                point.y -= 120;
+                if (point.y > startingHeights[i]) {
+                    var diff = point.y - startingHeights[i];
+                    diff = diff/amplitude * 5;
+                    point.y += diff;
+                }
+                point.y -= 125;
+
                 raster.position = point;
 
-                var a = path.getPointAt(path.length/2 - 20),
-                    b = path.getPointAt(path.length/2 + 20);
+                var a = path.getPointAt(path.length/2 - 3),
+                    b = path.getPointAt(path.length/2 + 3);
 
-                var rotation = Math.tan((b.x - a.x) / (b.y - a.y));
+                var rotation = Math.atan((b.x - a.x) / (b.y - a.y));
                 rotation = 180/Math.PI * rotation;
-                raster.rotate(rotation);
-                console.log(rotation);
+                rotation = (rotation < 0) ? rotation + 90: rotation - 90;
+                raster.rotate(-rotation - 8);
             }
             path.smooth();
             path.lineTo(new paper.Point(width, height));
