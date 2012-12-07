@@ -37,7 +37,8 @@ var Wave = (function(options) {
         rotations = [],
         startingHeights = []
         additions = []
-        speeds = [];
+        speeds = [],
+        colors = [];
 
 
     var init = function() {
@@ -53,6 +54,7 @@ var Wave = (function(options) {
             startingHeights.push(randomInt([height/2 - 10, height/2 + 10]));
             additions.push(randomInt([10, 30]));
             speeds.push(randomInt([1200, 1500]));
+            colors.push(randomChoice(['#1800B3', '#13008C', '#2B17B0', '#331EBA']));
         }
         requestAnimFrame(my.renderLoop);
     };
@@ -83,11 +85,11 @@ var Wave = (function(options) {
                 strokeColor: opt.strokeColor,
                 strokeWidth: opt.strokeWidth,
                 strokeCap: 'round',
-                fillColor: 'blue'
+                fillColor: colors[i]
             };
 
             var y = undefined;
-            for (var x = 0; x < lineLength + 50; x += lineLength / 50) {
+            for (var x = 0; x < lineLength + 10; x += lineLength / 10) {
                 amplitude = amplitude * opt.amplitudeFactor;
                 var time = Date.now();
 
@@ -159,6 +161,14 @@ var Wave = (function(options) {
         var end = range[0],
             start = range[1];
         return Math.random() * (end - start) + start;
+    };
+
+    function randomChoice(list) {
+        if (list.length === 0) {
+            return undefined;
+        }
+        var index = Math.floor(Math.random() * (list.length));
+        return list[index];
     };
 
     function clearCanvas() {
