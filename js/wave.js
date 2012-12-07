@@ -12,17 +12,17 @@ window.requestAnimFrame = (function(){
 
 var Wave = (function(options) {
 
-    var width = 1000,
-        height = 1000;
+    var width = $(window).width(),
+        height = $(window).height();
 
     var defaultDrawOptions = {
-        amplitudeFactor: 0.999,
-        startingPosition: [width/2, height/2],
-        waveCount: 30,
-        amplitudeRange: [40, 140],
-        waveLengthRange: [height/4, height/2],
-        lineLengthRange: [height/4, height/2],
-        rotationRange: [0, 2 * Math.PI],
+        amplitudeFactor: 1,
+        startingPosition: [0, height/2],
+        waveCount: 3,
+        amplitudeRange: [40,120],
+        waveLengthRange: [1200, 2000],
+        lineLengthRange: [width, width],
+        rotationRange: [0, 0],
         strokeColor: 'black',
         strokeWidth: 3
     };
@@ -34,7 +34,10 @@ var Wave = (function(options) {
         amplitudes = [],
         waveLengths = [],
         lineLengths = [],
-        rotations = [];
+        rotations = [],
+        startingHeights = []
+        additions = []
+        speeds = [];
 
 
     var init = function() {
@@ -47,6 +50,9 @@ var Wave = (function(options) {
             waveLengths.push(randomInt(drawOptions.waveLengthRange));
             lineLengths.push(randomInt(drawOptions.lineLengthRange));
             rotations.push(randomFloat(drawOptions.rotationRange));
+            startingHeights.push(randomInt([height/2 - 10, height/2 + 10]));
+            additions.push(randomInt([10, 30]));
+            speeds.push(randomInt([1200, 1500]));
         }
         requestAnimFrame(my.renderLoop);
     };
@@ -76,22 +82,29 @@ var Wave = (function(options) {
             path.style = {
                 strokeColor: opt.strokeColor,
                 strokeWidth: opt.strokeWidth,
-                strokeCap: 'round'
+                strokeCap: 'round',
+                fillColor: 'blue'
             };
 
-            for (var x = 0; x < lineLength; x += lineLength / 50) {
+            var y = undefined;
+            for (var x = 0; x < lineLength + 50; x += lineLength / 50) {
                 amplitude = amplitude * opt.amplitudeFactor;
                 var time = Date.now();
 
-                var y = wave(time, x, amplitude, waveLength),
-                    coord = rotate(x, y, rotation);
+                y = wave(time, x, amplitude, waveLength, additions[i], speeds[i]);
+                var coord = rotate(x, y, rotation);
 
                 newX = coord[0] + opt.startingPosition[0];
-                y = coord[1] + opt.startingPosition[1];
+                y = coord[1] + startingHeights[i];
                 path.lineTo(new paper.Point(newX, y));
             }
             path.smooth();
+            path.lineTo(new paper.Point(width, height));
+            path.lineTo(new paper.Point(0, height));
+            path.lineTo(new paper.Point(0, 100));
+
         }
+
         paper.view.draw();
         for (var i = 0; i < paths.length; ++i) {
             paths[i].remove();
@@ -109,7 +122,7 @@ var Wave = (function(options) {
      *
      * Returns Y value of the graph on given x.
      */
-    function wave(time, x, amplitude, waveLength) {
+    function wave(time, x, amplitude, waveLength, addition, speed) {
         // The multiplier of x defines the wave's length. E.g sin(3x) has 3 times
         // smaller wave length than sin(x).
         var x = x * (2 * Math.PI / waveLength);
@@ -118,7 +131,7 @@ var Wave = (function(options) {
         // Substituting pi/2 moves the wave, so it's "first" peak is where x=0.
         // sin returns values from -1 to 1, we want from 0 - 1, that's why we
         // add 1 and divide by 2.
-        var zeroToOne = (Math.sin(x - Math.PI / 2 + time/350) + 1) / 2;
+        var zeroToOne = (Math.sin(addition + x - Math.PI / 2 + time/speed) + 1) / 2;
 
         return zeroToOne * amplitude;
     };
