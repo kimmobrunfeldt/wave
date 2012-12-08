@@ -94,20 +94,29 @@ textarea {
    ========================================================================== */
 
 
+.panel {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 99;
+    width: 200px;
+    height: 100px;
+    background: rgba(0,0,0,0.05);
+    border: 1px solid #999;
+}
 
+.panel h2 {
+    padding: 20px 0 10px 0;
+    margin: 0;
+    text-align: center;
+    color: #333;
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
+.slider {
+    width: 100px;
+    margin-left: auto;
+    margin-right: auto;
+}
 
 /* ==========================================================================
    Helper classes

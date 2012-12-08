@@ -17,27 +17,29 @@ var Wave = (function(options) {
 
     var defaultDrawOptions = {
         startingPosition: [0, height/2],
-        waveCount: 5,
-        amplitudeRange: [100,200],
+        waveCount: 3,
+        amplitudeRange: [0,70],
         waveLengthRange: [1200, 2000],
-        lineLengthRange: [width, width],
         rotationRange: [0, 0],
         strokeColor: 'black',
-        strokeWidth: 3
+        strokeWidth: 3,
+        backgroundColor: [192, 226, 250]
     };
 
     var my = {},
         canvas = options.canvas,
         drawOptions = $.extend(true, {}, defaultDrawOptions, options.drawOptions),
         ctx = canvas.getContext('2d'),
+        paperObjects = [],
         amplitudes = [],
+        amplitudeAddition = 100,
         waveLengths = [],
-        lineLengths = [],
-        rotations = [],
-        startingHeights = []
-        additions = []
-        speeds = [],
-        colors = [];
+        waveRotations = [],
+        startingHeights = [],
+        waveAdditions = [],
+        waveSpeeds = [],
+        waveColors = []
+        startTime = Date.now();
 
 
     var init = function() {
@@ -48,12 +50,11 @@ var Wave = (function(options) {
         for (var i = 0; i < drawOptions.waveCount; ++i) {
             amplitudes.push(randomInt(drawOptions.amplitudeRange));
             waveLengths.push(randomInt(drawOptions.waveLengthRange));
-            lineLengths.push(randomInt(drawOptions.lineLengthRange));
-            rotations.push(randomFloat(drawOptions.rotationRange));
-            startingHeights.push(randomInt([height/2 - 10, height/2 + 10]));
-            additions.push(randomInt([10, 30]));
-            speeds.push(randomInt([1200, 1500]));
-            colors.push(randomChoice(['#1800B3', '#13008C', '#2B17B0', '#331EBA']));
+            waveRotations.push(randomFloat(drawOptions.rotationRange));
+            startingHeights.push(randomInt([height/2 - 20, height/2 + 20]));
+            waveAdditions.push(randomInt([10, 30]));
+            waveSpeeds.push(randomInt([1400, 2000]));
+            waveColors.push(randomChoice(['#1800B3', '#13008C', '#2B17B0', '#331EBA']));
         }
         requestAnimFrame(my.renderLoop);
     };
@@ -65,84 +66,132 @@ var Wave = (function(options) {
         requestAnimFrame(my.renderLoop);
     };
 
+    my.setWaveSize = function(size) {
+        amplitudeAddition = size;
+    };
+
     // Private methods
 
+    // Draw the whole scene
     function draw() {
         clearCanvas();
+        drawBackground();
 
+        for (var i = 0; i < drawOptions.waveCount; ++i) {
+
+            var waveOptions = {
+                amplitude: amplitudes[i] + amplitudeAddition,
+                waveLength: waveLengths[i],
+                waveRotation: waveRotations[i],
+                fillColor: waveColors[i],
+                waveSpeed: waveSpeeds[i],
+                waveAddition: waveAdditions[i],
+                startingHeight: startingHeights[i]
+            };
+
+            if (i === drawOptions.waveCount - 1) {
+                raster = new paper.Raster('ship');
+                paperObjects.push(raster);
+                drawWave(waveOptions, drawOptions, raster);
+            } else {
+                drawWave(waveOptions, drawOptions);
+            }
+        }
+
+        paper.view.draw();
+        clearPaperObjects();
+    };
+
+    function drawBackground() {
         var background = new paper.Path();
-        background.style = {fillColor: '#C0E2FA'};
+
+        var color = drawOptions.backgroundColor;
+        var factor = 1 - amplitudeAddition / 1000;
+        color = color.map(function(x) { return x * factor});
+        color = 'rgb(' + color[0].toFixed(0) + ',' + color[1].toFixed(0) + ',' + color[2].toFixed(0) + ')';
+
+        background.style = {fillColor: color};
         background.lineTo(new paper.Point(canvas.width, 0));
         background.lineTo(new paper.Point(canvas.width, canvas.height));
         background.lineTo(new paper.Point(0, canvas.height));
         background.lineTo(new paper.Point(0, 0));
-        var opt = drawOptions;
-
-        var paperElements = [];
-        for (var i = 0; i < opt.waveCount; ++i) {
-            var amplitude = amplitudes[i];
-                waveLength = waveLengths[i];
-                rotation = rotations[i];
-                lineLength = lineLengths[i];
-
-            var raster = undefined;
-            if (i === opt.waveCount - 1) {
-                raster = new paper.Raster('ship');
-                paperElements.push(raster);
-            }
-
-            var path = new paper.Path();
-            paperElements.push(path);
-            path.style = {
-                strokeColor: opt.strokeColor,
-                strokeWidth: opt.strokeWidth,
-                strokeCap: 'round',
-                fillColor: colors[i]
-            };
-
-            var y = undefined;
-            for (var x = 0; x < lineLength + 10; x += lineLength / 10) {
-                var time = Date.now();
-
-                y = wave(time, x, amplitude, waveLength, additions[i], speeds[i]);
-                var coord = rotate(x, y, rotation);
-
-                newX = coord[0] + opt.startingPosition[0];
-                y = coord[1] + startingHeights[i];
-                path.lineTo(new paper.Point(newX, y));
-            }
-            if (raster !== undefined) {
-                var point = path.getPointAt(path.length/2);
-                if (point.y > startingHeights[i]) {
-                    var diff = point.y - startingHeights[i];
-                    diff = diff/amplitude * 5;
-                    point.y += diff;
-                }
-                point.y -= 125;
-
-                raster.position = point;
-
-                var a = path.getPointAt(path.length/2 - 10),
-                    b = path.getPointAt(path.length/2 + 10);
-
-                var rotation = Math.atan((b.x - a.x) / (b.y - a.y));
-                rotation = 180/Math.PI * rotation;
-                rotation = (rotation < 0) ? rotation + 90: rotation - 90;
-                raster.rotate(-rotation - 8);
-            }
-            path.smooth();
-            path.lineTo(new paper.Point(width, height));
-            path.lineTo(new paper.Point(0, height));
-            path.lineTo(new paper.Point(0, 100));
-
-        }
-
-        paper.view.draw();
-        for (var i = 0; i < paperElements.length; ++i) {
-            paperElements[i].remove();
-        }
-        background.remove();
+        paperObjects.push(background);
     };
+
+    /*
+     * Draws a single wave, also if raster is defined, positionShip() is
+     * called to move the drawed ship to correct position.
+     * It is done this way because positionShip function has to get the last
+     * wave-path to calculate the middle position, and the path gets messed
+     * up when the wave is color filled.
+     */
+    function drawWave(waveOptions, drawOptions, raster) {
+
+        var amplitude = waveOptions.amplitude,
+            waveLength = waveOptions.waveLength,
+            waveRotation = waveOptions.waveRotation,
+            waveSpeed = waveOptions.waveSpeed,
+            waveAddition = waveOptions.waveAddition,
+            lineLength = canvas.width;
+
+        var path = new paper.Path();
+        paperObjects.push(path);
+        path.style = {
+            strokeColor: drawOptions.strokeColor,
+            strokeWidth: drawOptions.strokeWidth,
+            strokeCap: 'round',
+            fillColor: waveOptions.fillColor
+        };
+
+        var time = Date.now() - startTime;
+        for (var x = 0; x < lineLength + 10; x += lineLength / 10) {
+
+            newX = x + drawOptions.startingPosition[0];
+            y = wave(time, x, amplitude, waveLength, waveAddition, waveSpeed);
+            y = y + waveOptions.startingHeight;
+
+            path.lineTo(new paper.Point(newX, y));
+        }
+        path.rotate(waveRotation);
+        path.smooth();
+
+        if (typeof raster !== 'undefined') {
+            positionShip(raster, path, amplitude);
+        }
+
+        path.lineTo(new paper.Point(width, height));
+        path.lineTo(new paper.Point(0, height));
+        path.lineTo(new paper.Point(0, 100));
+    };
+
+    function positionShip(raster, lastWavePath, amplitude) {
+        var path = lastWavePath;
+
+        var point = path.getPointAt(path.length / 2);
+        var startingHeight = startingHeights[startingHeights.length - 1];
+        if (point.y > startingHeight) {
+            var diff = point.y - startingHeight;
+            diff = diff / amplitude * 3;
+            point.y += diff;
+        }
+        point.y -= 130;
+
+        raster.position = point;
+
+        var a = path.getPointAt(path.length / 2 - 10),
+            b = path.getPointAt(path.length / 2 + 10);
+
+        var rotation = Math.atan((b.x - a.x) / (b.y - a.y));
+        rotation = 180 / Math.PI * rotation;
+        rotation = (rotation < 0) ? rotation + 90: rotation - 90;
+        raster.rotate(-rotation - 8);
+    };
+
+    function clearPaperObjects() {
+        for (var i = 0; i < paperObjects.length; ++i) {
+            paperObjects[i].remove();
+        }
+    }
 
     /*
      * As x grows, (x, y) coordinates start to shape a wave.
