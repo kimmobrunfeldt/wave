@@ -17,7 +17,7 @@
     $('#speedSlider').slider({
         range: "min",
         value: 0,
-        max: 10,
+        max: 14,
         slide: function(event, ui) {
             wave.setSpeed(-ui.value);
         }

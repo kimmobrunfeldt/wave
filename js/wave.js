@@ -17,12 +17,12 @@ var Wave = (function(options) {
 
     var defaultDrawOptions = {
         startingPosition: [0, height/2],
-        waveCount: 3,
+        waveCount: 4,
         amplitudeRange: [0,70],
         waveLengthRange: [1200, 2000],
         rotationRange: [0, 0],
         strokeColor: 'black',
-        strokeWidth: 3,
+        strokeWidth: 0,
         backgroundColor: [192, 226, 250]
     };
 
@@ -54,7 +54,7 @@ var Wave = (function(options) {
             waveRotations.push(randomFloat(drawOptions.rotationRange));
             startingHeights.push(randomInt([height/2 - 20, height/2 + 20]));
             waveAdditions.push(randomInt([10, 30]));
-            waveSpeeds.push(randomInt([10, 15]));
+            waveSpeeds.push(randomInt([15, 15]));
             waveColors.push(randomChoice(['#1800B3', '#13008C', '#2B17B0', '#331EBA']));
         }
         requestAnimFrame(my.renderLoop);
