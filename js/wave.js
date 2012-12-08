@@ -33,14 +33,15 @@ var Wave = (function(options) {
         paperObjects = [],
         amplitudes = [],
         amplitudeAddition = 100,
+        speedAddition = 0,
         waveLengths = [],
         waveRotations = [],
         startingHeights = [],
         waveAdditions = [],
         waveSpeeds = [],
         waveColors = []
-        startTime = Date.now();
-
+        currentTime = 0
+        rewind = false;
 
     var init = function() {
         canvas.width = width;
@@ -53,7 +54,7 @@ var Wave = (function(options) {
             waveRotations.push(randomFloat(drawOptions.rotationRange));
             startingHeights.push(randomInt([height/2 - 20, height/2 + 20]));
             waveAdditions.push(randomInt([10, 30]));
-            waveSpeeds.push(randomInt([1400, 2000]));
+            waveSpeeds.push(randomInt([10, 15]));
             waveColors.push(randomChoice(['#1800B3', '#13008C', '#2B17B0', '#331EBA']));
         }
         requestAnimFrame(my.renderLoop);
@@ -70,13 +71,27 @@ var Wave = (function(options) {
         amplitudeAddition = size;
     };
 
+    my.setSpeed = function(addition) {
+        speedAddition = addition;
+    };
+
+    my.setRewind = function(value) {
+        rewind = value;
+    };
+
     // Private methods
 
     // Draw the whole scene
     function draw() {
         clearCanvas();
         drawBackground();
+        if (rewind) {
+            currentTime -= 0.1;
+        } else {
+            currentTime += 0.1;
+        }
 
+        console.log(currentTime);
         for (var i = 0; i < drawOptions.waveCount; ++i) {
 
             var waveOptions = {
@@ -84,7 +99,7 @@ var Wave = (function(options) {
                 waveLength: waveLengths[i],
                 waveRotation: waveRotations[i],
                 fillColor: waveColors[i],
-                waveSpeed: waveSpeeds[i],
+                waveSpeed: waveSpeeds[i] + speedAddition,
                 waveAddition: waveAdditions[i],
                 startingHeight: startingHeights[i]
             };
@@ -143,7 +158,7 @@ var Wave = (function(options) {
             fillColor: waveOptions.fillColor
         };
 
-        var time = Date.now() - startTime;
+        var time = currentTime;
         for (var x = 0; x < lineLength + 10; x += lineLength / 10) {
 
             newX = x + drawOptions.startingPosition[0];
@@ -166,25 +181,25 @@ var Wave = (function(options) {
 
     function positionShip(raster, lastWavePath, amplitude) {
         var path = lastWavePath;
-
         var point = path.getPointAt(path.length / 2);
-        var startingHeight = startingHeights[startingHeights.length - 1];
-        if (point.y > startingHeight) {
-            var diff = point.y - startingHeight;
-            diff = diff / amplitude * 3;
-            point.y += diff;
-        }
-        point.y -= 130;
-
-        raster.position = point;
 
         var a = path.getPointAt(path.length / 2 - 10),
-            b = path.getPointAt(path.length / 2 + 10);
-
-        var rotation = Math.atan((b.x - a.x) / (b.y - a.y));
+            b = path.getPointAt(path.length / 2 + 10),
+            rotation = Math.atan((b.x - a.x) / (b.y - a.y));
         rotation = 180 / Math.PI * rotation;
         rotation = (rotation < 0) ? rotation + 90: rotation - 90;
         raster.rotate(-rotation - 8);
+
+        var startingHeight = startingHeights[startingHeights.length - 1];
+        if (point.y > startingHeight) {
+            var diff = point.y - startingHeight;
+            diff = diff / amplitude * 4;
+            point.y += diff;
+        }
+
+        point.y -= 130 * (1 + 0.1 * (Math.abs(rotation) / 45));
+
+        raster.position = point;
     };
 
     function clearPaperObjects() {

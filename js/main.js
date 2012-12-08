@@ -14,4 +14,24 @@
         }
     });
 
+    $('#speedSlider').slider({
+        range: "min",
+        value: 0,
+        max: 10,
+        slide: function(event, ui) {
+            wave.setSpeed(-ui.value);
+        }
+    });
+
+    $('#rewind').click(function() {
+        var thisCheck = $(this);
+        if (thisCheck.is(':checked')) {
+            wave.setRewind(true);
+        } else {
+            wave.setRewind(false);
+        }
+
+    });
+
+
 })($, window);

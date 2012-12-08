@@ -100,16 +100,24 @@ textarea {
     left: 10px;
     z-index: 99;
     width: 200px;
-    height: 100px;
+    height: 230px;
     background: rgba(0,0,0,0.05);
     border: 1px solid #999;
+    text-align: center;
 }
 
 .panel h2 {
     padding: 20px 0 10px 0;
     margin: 0;
-    text-align: center;
     color: #333;
+}
+
+.panel input {
+    margin-top: 30px;
+}
+
+.panel label {
+    padding-left: 5px;
 }
 
 .slider {
@@ -117,6 +125,7 @@ textarea {
     margin-left: auto;
     margin-right: auto;
 }
+
 
 /* ==========================================================================
    Helper classes
