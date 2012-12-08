@@ -91,7 +91,6 @@ var Wave = (function(options) {
             currentTime += 0.1;
         }
 
-        console.log(currentTime);
         for (var i = 0; i < drawOptions.waveCount; ++i) {
 
             var waveOptions = {
